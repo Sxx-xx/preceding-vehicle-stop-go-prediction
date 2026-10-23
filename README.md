@@ -263,7 +263,7 @@ V2X=data/raw/v2xseq/full/extracted/V2X-Seq-TFD
 .venv/bin/python scripts/v2xseq_extract.py --root $V2X --out data/raw/v2xseq/results/leaders_v11_noshift --workers 4   # 보정 없음
 .venv/bin/python scripts/v2xseq_extract.py --root $V2X --shift-table results/v2xseq/stopline_shift_q05.csv --out data/raw/v2xseq/results/leaders_v11_q05 --workers 4
 .venv/bin/python scripts/v2xseq_extract.py --root $V2X --shift-table results/v2xseq/stopline_shift_q20.csv --out data/raw/v2xseq/results/leaders_v11_q20 --workers 4
-.venv/bin/python scripts/v2xseq_v11.py --tasks traj,q1,q2,q3,q4
+.venv/bin/python scripts/v2xseq_v11.py --tasks traj,q1,q2,q3,q4,q6
 ```
 
 ### 이벤트별 요약표 재생성

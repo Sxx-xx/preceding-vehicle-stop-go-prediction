@@ -17,7 +17,7 @@ gitignore다. 수치의 해석과 확인/추측 구분은 `docs/FINDINGS.md`의 
 | `v2xseq/eval/v4/calibrated_rule/` | 23폴드 보정 규칙 A, 쌍별 비교, t_r 고정 민감도 | D | `v2xseq_followup.py --tasks D` |
 | `v2xseq/leadtime_dz/` | V2X-Seq 띠 509건 리드타임·확률 분석 | L | `leadtime_dz.py` |
 | `v2xseq/staged/` | 두 단계 판단(N, N2) | N, N2 | `staged_dz.py`, `staged_n2.py` |
-| `v2xseq/v11/` | 논문 v1.1 보완(Q): 라벨 경계 사례(q1), 정지선 보정 민감도(q2), θ 민감도(q3), 확정 시점의 여유(q4) (이벤트별 표는 미포함) | Q | `v2xseq_v11.py`, `v2xseq_calibrate.py --lead-q`, `v2xseq_extract.py` |
+| `v2xseq/v11/` | 논문 v1.1 보완(Q): 라벨 경계 사례(q1), 정지선 보정 민감도(q2), θ 민감도(q3), 확정 시점의 여유(q4), 위험 오류 9건의 여유(q6) (이벤트별 표는 미포함) | Q | `v2xseq_v11.py`, `v2xseq_calibrate.py --lead-q`, `v2xseq_extract.py` |
 | `sind/` | SinD 공개 샘플 4모델 비교, 지도 겹침 그림 (이벤트표는 미포함, README 6절로 재생성) | SinD | `run_sind.py`, `sind_check_alignment.py` |
 | `sind/full/` | SinD v2.0 전체 선별, 창춘 선두 102건 경계·평가 | G | `sind_full.py` |
 | `womd/w0/` | WOMD 타당성 점검(샤드 2개) 요약 (이벤트·트랙별 표는 미포함, README 6절로 재생성) | W0 | `womd_w0.py` |

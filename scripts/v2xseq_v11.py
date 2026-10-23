@@ -11,6 +11,9 @@ out-of-fold P(go) (results/v2xseq/leadtime_dz, 23-fold LOIO) and the same bootst
          macro-F1 (all / band) for the tables made with no shift, the 5 %, 10 % (= results/v2xseq/eval/v4) and
          20 % halt-position quantile (scripts/v2xseq_calibrate.py --lead-q, scripts/v2xseq_extract.py)
   q3   : theta sensitivity of the staged decision (MLP, band 509): theta = 0.02, 0.05, 0.10, 0.20 and all at 2.0 s
+  q6   : the risky errors of q4 (theta = 0.05: actual stops committed as go): commit time t_c, actual halt time, and
+         the time t_e the error shows (first frame at/after t_c with a_lon < -1.0 m/s^2); the q4 follower deceleration
+         (tau = 2.0 s, 2 m behind) evaluated at t_e from the raw trajectory
   q4   : margin at the commit time t_c (MLP, theta = 0.05 and all at 2.0 s) for the band leaders that actually
          stopped: d(t_c), time to the actual halt, a(t_c), and the constant deceleration a follower at the same
          speed tau = 2.0 / 1.5 s behind needs to stop 2 m behind the leader: v^2 / (2 (tau v + d(t_c) - 2))
@@ -18,9 +21,9 @@ out-of-fold P(go) (results/v2xseq/leadtime_dz, 23-fold LOIO) and the same bootst
          position, v^2 / (2 (tau v + d(t_c) - d_halt - 2)).
 
 Outputs under results/v2xseq/v11/: q1_label_boundary.csv, q2_stopline_sensitivity.csv (+ q2_fold_t50.csv),
-q3_theta_sensitivity.csv, q4_commit_margin.csv; per-event tables under data/raw/v2xseq/results/v11/.
+q3_theta_sensitivity.csv, q4_commit_margin.csv, q6_risky_errors.csv; per-event tables under data/raw/v2xseq/results/v11/.
 
-  .venv/bin/python scripts/v2xseq_v11.py --tasks traj,q1,q3,q4
+  .venv/bin/python scripts/v2xseq_v11.py --tasks traj,q1,q3,q4,q6
   .venv/bin/python scripts/v2xseq_v11.py --tasks q2      # after the three scripts/v2xseq_extract.py runs
 """
 import argparse
@@ -346,6 +349,57 @@ def q4(args, out):
         print(Q.round(4).to_string(index=False), flush=True)
 
 
+# ------------------------------------------------------------------------------------------------ q6
+A_SHOW = -1.0
+
+
+def q6(args, out):
+    ev = pd.read_csv(f"{LEADS_DIR}/events_through.csv")
+    E = pd.read_csv(f"{RAW_OUT}/q4_events.csv")
+    R = E[(E.policy == "theta=0.05") & (E.yhat == 1)].sort_values("ev")
+    _init(args.shift_table)
+    rows = []
+    for r in R.itertuples():
+        e = ev.iloc[int(r.ev)]
+        rec = v2xseq.load_recording(ROOT, _G["segs"][e.segment], _G["lanes"], shift_table=_G["shift"])
+        aps = build_approaches(rec.map.stop_lines())
+        k = rec.tracks[rec.tracks["track_id"] == e.track_id].sort_values("frame_id")
+        fr = k["frame_id"].values
+        fx = k["x"].values + 0.5 * k["length"].values * np.cos(k["heading_rad"].values)
+        fy = k["y"].values + 0.5 * k["length"].values * np.sin(k["heading_rad"].values)
+        d, _ = project(aps[int(e.sid)], fx, fy)
+        v, a = np.hypot(k["vx"].values, k["vy"].values), k["a_lon"].values
+        ts = np.round((fr - e.f_yellow) * v2xseq.DT, 3)
+        tc = float(r.t_c)
+        a5 = pd.Series(a).rolling(5, center=True, min_periods=1).mean().values   # 0.5 s centred mean, robustness only
+        def first(cond):
+            i = np.where((ts >= tc - 1e-6) & cond)[0]
+            return int(i[0]) if len(i) else None
+        ie, ie5 = first(a < A_SHOW), first(a5 < A_SHOW)
+        row = dict(ev=int(r.ev), segment=e.segment, track_id=int(e.track_id), site=e.group, t_c=tc, d_tc=r.d_tc, v_tc=r.v_tc, a_tc=r.a_tc,
+                   t_halt_s=r.t_halt_s, d_halt_m=r.d_halt_m, t_end_s=float(ts[-1]))
+        for tag, i in (("", ie), ("_smooth5", ie5)):
+            if i is None:
+                row.update({f"t_e{tag}": np.nan})
+                continue
+            de, ve, ae = float(d[i]), float(v[i]), float(a[i])
+            den, den2 = 2 * (2.0 * ve + de - FOLLOW_MARGIN), 2 * (2.0 * ve + de - float(r.d_halt_m) - FOLLOW_MARGIN)
+            row.update({f"t_e{tag}": float(ts[i]), f"t_e_minus_t_c{tag}": float(ts[i] - tc), f"t_e_is_t_c{tag}": bool(abs(ts[i] - tc) < 1e-6),
+                        f"d_te{tag}": de, f"v_te{tag}": ve, f"a_te{tag}": ae, f"a_smooth5_te{tag}": float(a5[i]),
+                        f"t_halt_minus_t_e{tag}": float(r.t_halt_s - ts[i]),
+                        f"a_req_tau2.0_te{tag}": ve ** 2 / den if den > 0 else np.inf,
+                        f"a_req_actual_tau2.0_te{tag}": ve ** 2 / den2 if den2 > 0 else np.inf})
+        rows.append(row)
+    Q = pd.DataFrame(rows)
+    Q.to_csv(f"{out}/q6_risky_errors.csv", index=False)
+    with pd.option_context("display.width", 300, "display.max_columns", 60):
+        print(Q.round(3).to_string(index=False), flush=True)
+    for tag in ("", "_smooth5"):
+        x = Q[f"a_req_tau2.0_te{tag}"].values
+        print(f"a_req at t_e{tag or ' (raw a_lon)'}: n {np.isfinite(x).sum()}/{len(x)} median {np.nanmedian(x):.4f} max {np.nanmax(x):.4f} >3.0: {int(np.sum(x > A_HARD))}; "
+              f"t_e - t_c median {Q[f't_e_minus_t_c{tag}'].median():.2f}", flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tasks", default="traj,q1,q2,q3,q4")
@@ -358,7 +412,7 @@ def main():
     os.makedirs(RAW_OUT, exist_ok=True)
     for t in args.tasks.split(","):
         print(f"=== {t}", flush=True)
-        {"traj": lambda a: traj(a), "q1": lambda a: q1(a, a.out), "q2": lambda a: q2(a, a.out), "q3": lambda a: q3(a, a.out), "q4": lambda a: q4(a, a.out)}[t](args)
+        {"traj": lambda a: traj(a), "q1": lambda a: q1(a, a.out), "q2": lambda a: q2(a, a.out), "q3": lambda a: q3(a, a.out), "q4": lambda a: q4(a, a.out), "q6": lambda a: q6(a, a.out)}[t](args)
 
 
 if __name__ == "__main__":
