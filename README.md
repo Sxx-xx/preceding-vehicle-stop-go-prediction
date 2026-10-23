@@ -264,6 +264,10 @@ V2X=data/raw/v2xseq/full/extracted/V2X-Seq-TFD
 .venv/bin/python scripts/v2xseq_extract.py --root $V2X --shift-table results/v2xseq/stopline_shift_q05.csv --out data/raw/v2xseq/results/leaders_v11_q05 --workers 4
 .venv/bin/python scripts/v2xseq_extract.py --root $V2X --shift-table results/v2xseq/stopline_shift_q20.csv --out data/raw/v2xseq/results/leaders_v11_q20 --workers 4
 .venv/bin/python scripts/v2xseq_v11.py --tasks traj,q1,q2,q3,q4,q6
+
+# 10) R: 추종 정책 재생 (딜레마존 선두 509건 뒤 가상 AV, 정책 4개; 시뮬레이터 src/dzp/policy_replay.py)
+.venv/bin/python scripts/v2xseq_policy.py --tasks traj,run
+.venv/bin/python scripts/v2xseq_policy.py --tasks run --clean-d      # 앞차 위치 역행 제거 변형
 ```
 
 ### 이벤트별 요약표 재생성

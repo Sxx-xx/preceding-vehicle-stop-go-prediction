@@ -5,7 +5,7 @@ gitignore다. 수치의 해석과 확인/추측 구분은 `docs/FINDINGS.md`의 
 
 | 폴더 | 내용 | FINDINGS 절 | 만든 스크립트 |
 |---|---|---|---|
-| `figures/` | 논문용 그림(300 dpi): 경계(a), t_r 민감도(b), 학습 곡선(c), 교차로별 경계(d), 리드타임(l_a–l_c), 두 단계 판단(n), 통합 검증(p) | F, L, N, P | `paper_materials.py`, `leadtime_dz_figures.py`, `staged_dz_figure.py`, `pooled_eval.py` |
+| `figures/` | 논문용 그림(300 dpi): 경계(a), t_r 민감도(b), 학습 곡선(c), 교차로별 경계(d), 리드타임(l_a–l_c), 두 단계 판단(n), 통합 검증(p), 추종 정책 재생(r) | F, L, N, P, R | `paper_materials.py`, `leadtime_dz_figures.py`, `staged_dz_figure.py`, `pooled_eval.py`, `v2xseq_policy.py` |
 | `figures/data/` | 그림 데이터 CSV와 D절 표(`table_D_*.csv`) | F, D | 같음 |
 | `fluid_fi/` | FLUID FI 151건 벤치마크(규칙 A/B, LR, MLP, LSTM, Transformer), 오프셋 민감도, 그림 1–4 | FLUID FI 벤치마크 | `run_benchmark.py` |
 | `fluid_fi/leader_follower/` | 선두/추종 분리 평가, 위험 쌍; `leader/`의 `model_compare`, `noise`, `seq_dva`, `external_sind_sample` 하위 실험 | 선두/추종, 모델 비교, 잡음, 외부 시험 | `leader_follower.py`, `model_compare.py`, `noise_robustness.py`, `seq_dva.py`, `external_sind_sample.py` |
@@ -18,6 +18,7 @@ gitignore다. 수치의 해석과 확인/추측 구분은 `docs/FINDINGS.md`의 
 | `v2xseq/leadtime_dz/` | V2X-Seq 띠 509건 리드타임·확률 분석 | L | `leadtime_dz.py` |
 | `v2xseq/staged/` | 두 단계 판단(N, N2) | N, N2 | `staged_dz.py`, `staged_n2.py` |
 | `v2xseq/v11/` | 논문 v1.1 보완(Q): 라벨 경계 사례(q1), 정지선 보정 민감도(q2), θ 민감도(q3), 확정 시점의 여유(q4), 위험 오류 9건의 여유(q6) (이벤트별 표는 미포함) | Q | `v2xseq_v11.py`, `v2xseq_calibrate.py --lead-q`, `v2xseq_extract.py` |
+| `v2xseq/policy/` | 추종 정책 재생(R): 정책별 이벤트 지표(`events_default*.csv`), 요약·부트스트랩(`summary_default*.csv`), 민감도(`sensitivity.csv`), 외삽 집계 | R | `v2xseq_policy.py`, `src/dzp/policy_replay.py` |
 | `sind/` | SinD 공개 샘플 4모델 비교, 지도 겹침 그림 (이벤트표는 미포함, README 6절로 재생성) | SinD | `run_sind.py`, `sind_check_alignment.py` |
 | `sind/full/` | SinD v2.0 전체 선별, 창춘 선두 102건 경계·평가 | G | `sind_full.py` |
 | `womd/w0/` | WOMD 타당성 점검(샤드 2개) 요약 (이벤트·트랙별 표는 미포함, README 6절로 재생성) | W0 | `womd_w0.py` |
