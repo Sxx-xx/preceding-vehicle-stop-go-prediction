@@ -7,6 +7,7 @@ leading halted vehicles end up ~1 m upstream of the line. Approaches with fewer 
 (the adapter then leaves the line where it is).
 
   .venv/bin/python scripts/v2xseq_calibrate.py --check data/raw/v2xseq/results/check_v3 --out results/v2xseq/stopline_shift.csv
+  --lead-q 0.05 / 0.20 (Q2 sensitivity, docs/FINDINGS.md Q section) -> results/v2xseq/stopline_shift_q05.csv / _q20.csv
 """
 import argparse
 import os
@@ -28,6 +29,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--lead-q", type=float, default=LEAD_Q, help="halt-position quantile that is put TARGET_M upstream of the line")
     args = ap.parse_args()
     A = pd.read_csv(f"{args.check}/approaches.csv")
     H = pd.read_json(f"{args.check}/stop_positions.json")
@@ -38,7 +40,7 @@ def main():
         h = H[H["inter"] == site].merge(a[["segment", "sid", "key"]], on=["segment", "sid"])
         for key, g in a.groupby("key"):
             d = np.concatenate([np.array(x) for x in h.loc[h["key"] == key, "d"]]) if (h["key"] == key).any() else np.array([])
-            q10 = float(np.quantile(d, LEAD_Q)) if len(d) >= MIN_HALTS else np.nan
+            q10 = float(np.quantile(d, args.lead_q)) if len(d) >= MIN_HALTS else np.nan
             rows.append(dict(site=site, name=g["name"].iloc[0], mid_x=g["mid_x"].mean(), mid_y=g["mid_y"].mean(), segs=len(g),
                              n_halt=len(d), q10_halt_m=q10, q50_halt_m=float(np.median(d)) if len(d) else np.nan,
                              shift_m=q10 - TARGET_M if np.isfinite(q10) else np.nan))

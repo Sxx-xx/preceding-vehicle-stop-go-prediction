@@ -255,6 +255,15 @@ FI="--dataset fluid --root data/raw/fluid/FI/derived_data --site FI \
 .venv/bin/python scripts/pooled_fix.py
 .venv/bin/python scripts/staged_n2.py --event-dir data/raw/pooled/table_no_womd --preds data/raw/pooled/table_no_womd \
     --preds-kind pooled --inner-folds 10 --out results/pooled/fix/staged_no_womd_fix
+
+# 9) Q: v1.1 보완 분석 (라벨 경계 사례, 정지선 보정 민감도, θ 민감도, 확정 시점의 여유; 선두 추출 1회 약 5분)
+.venv/bin/python scripts/v2xseq_calibrate.py --check data/raw/v2xseq/results/check_v3 --out results/v2xseq/stopline_shift_q05.csv --lead-q 0.05
+.venv/bin/python scripts/v2xseq_calibrate.py --check data/raw/v2xseq/results/check_v3 --out results/v2xseq/stopline_shift_q20.csv --lead-q 0.20
+V2X=data/raw/v2xseq/full/extracted/V2X-Seq-TFD
+.venv/bin/python scripts/v2xseq_extract.py --root $V2X --out data/raw/v2xseq/results/leaders_v11_noshift --workers 4   # 보정 없음
+.venv/bin/python scripts/v2xseq_extract.py --root $V2X --shift-table results/v2xseq/stopline_shift_q05.csv --out data/raw/v2xseq/results/leaders_v11_q05 --workers 4
+.venv/bin/python scripts/v2xseq_extract.py --root $V2X --shift-table results/v2xseq/stopline_shift_q20.csv --out data/raw/v2xseq/results/leaders_v11_q20 --workers 4
+.venv/bin/python scripts/v2xseq_v11.py --tasks traj,q1,q2,q3,q4
 ```
 
 ### 이벤트별 요약표 재생성

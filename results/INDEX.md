@@ -10,13 +10,14 @@ gitignore다. 수치의 해석과 확인/추측 구분은 `docs/FINDINGS.md`의 
 | `fluid_fi/` | FLUID FI 151건 벤치마크(규칙 A/B, LR, MLP, LSTM, Transformer), 오프셋 민감도, 그림 1–4 | FLUID FI 벤치마크 | `run_benchmark.py` |
 | `fluid_fi/leader_follower/` | 선두/추종 분리 평가, 위험 쌍; `leader/`의 `model_compare`, `noise`, `seq_dva`, `external_sind_sample` 하위 실험 | 선두/추종, 모델 비교, 잡음, 외부 시험 | `leader_follower.py`, `model_compare.py`, `noise_robustness.py`, `seq_dva.py`, `external_sind_sample.py` |
 | `fluid_fi/leadtime_dz/` | FLUID 띠 26건 리드타임 표 | L | `leadtime_dz.py` |
-| `v2xseq/` | V2X-Seq 정지선 보정표 `stopline_shift.csv` | V2X-Seq 적합성 | `v2xseq_calibrate.py` |
+| `v2xseq/` | V2X-Seq 정지선 보정표 `stopline_shift.csv` (10 % 분위), Q2 민감도용 `stopline_shift_q05.csv`, `_q20.csv` | V2X-Seq 적합성, Q | `v2xseq_calibrate.py` |
 | `v2xseq/review/` | 교차로별 선별표 `per_site.csv` (이벤트별 라벨 감사표는 미포함, README 6절로 재생성) | V2X-Seq 적합성 | `v2xseq_review.py`, `v2xseq_ambiguous_go.py` |
 | `v2xseq/eval/v3`, `v4`, `v4_excl95` | 외부 시험·LOIO·민감도·ablation(v3 = 정지선 보정 전, v4 = 보정 후, v4_excl95 = 선을 6 m 안에서 넘고 멈춘 애매한 통과 선두 70건 제외) | V2X-Seq 평가 | `v2xseq_eval.py`, `v2xseq_summary.py` |
 | `v2xseq/eval/v4/followup/` | 후속 A(가속도)·B(딜레마존)·C(t_r) | V2X-Seq 후속 | `v2xseq_followup.py` |
 | `v2xseq/eval/v4/calibrated_rule/` | 23폴드 보정 규칙 A, 쌍별 비교, t_r 고정 민감도 | D | `v2xseq_followup.py --tasks D` |
 | `v2xseq/leadtime_dz/` | V2X-Seq 띠 509건 리드타임·확률 분석 | L | `leadtime_dz.py` |
 | `v2xseq/staged/` | 두 단계 판단(N, N2) | N, N2 | `staged_dz.py`, `staged_n2.py` |
+| `v2xseq/v11/` | 논문 v1.1 보완(Q): 라벨 경계 사례(q1), 정지선 보정 민감도(q2), θ 민감도(q3), 확정 시점의 여유(q4) (이벤트별 표는 미포함) | Q | `v2xseq_v11.py`, `v2xseq_calibrate.py --lead-q`, `v2xseq_extract.py` |
 | `sind/` | SinD 공개 샘플 4모델 비교, 지도 겹침 그림 (이벤트표는 미포함, README 6절로 재생성) | SinD | `run_sind.py`, `sind_check_alignment.py` |
 | `sind/full/` | SinD v2.0 전체 선별, 창춘 선두 102건 경계·평가 | G | `sind_full.py` |
 | `womd/w0/` | WOMD 타당성 점검(샤드 2개) 요약 (이벤트·트랙별 표는 미포함, README 6절로 재생성) | W0 | `womd_w0.py` |

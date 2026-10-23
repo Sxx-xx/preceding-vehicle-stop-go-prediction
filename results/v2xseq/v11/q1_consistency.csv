@@ -1,0 +1,10 @@
+,value
+n,1867
+n_stop,575
+n_go,1292
+halt_before_cross,572
+halt_before_cross_label0,572
+label0_without_traj_halt,3
+halt_then_cross,10
+halt_no_cross,562
+cross_no_halt_before,1295
