@@ -268,6 +268,9 @@ V2X=data/raw/v2xseq/full/extracted/V2X-Seq-TFD
 # 10) R: 추종 정책 재생 (딜레마존 선두 509건 뒤 가상 AV, 정책 4개; 시뮬레이터 src/dzp/policy_replay.py)
 .venv/bin/python scripts/v2xseq_policy.py --tasks traj,run
 .venv/bin/python scripts/v2xseq_policy.py --tasks run --clean-d      # 앞차 위치 역행 제거 변형
+
+# 11) S: 선두 차량 차종 (원자료 sub_type·length를 트랙 ID로 다시 붙임, 이벤트 있는 세그먼트 1,305개 약 5분)
+.venv/bin/python scripts/v2xseq_vehicle_type.py --tasks types,s1,s2,s3,s4 --workers 4
 ```
 
 ### 이벤트별 요약표 재생성
