@@ -270,7 +270,7 @@ V2X=data/raw/v2xseq/full/extracted/V2X-Seq-TFD
 .venv/bin/python scripts/v2xseq_policy.py --tasks run --clean-d      # 앞차 위치 역행 제거 변형
 
 # 11) S: 선두 차량 차종 (원자료 sub_type·length를 트랙 ID로 다시 붙임, 이벤트 있는 세그먼트 1,305개 약 5분)
-.venv/bin/python scripts/v2xseq_vehicle_type.py --tasks types,s1,s2,s3,s4 --workers 4
+.venv/bin/python scripts/v2xseq_vehicle_type.py --tasks types,s1,s2,s3,s4,s5 --workers 4
 ```
 
 ### 이벤트별 요약표 재생성

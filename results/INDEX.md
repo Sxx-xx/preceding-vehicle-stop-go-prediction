@@ -19,7 +19,7 @@ gitignore다. 수치의 해석과 확인/추측 구분은 `docs/FINDINGS.md`의 
 | `v2xseq/staged/` | 두 단계 판단(N, N2) | N, N2 | `staged_dz.py`, `staged_n2.py` |
 | `v2xseq/v11/` | 논문 v1.1 보완(Q): 라벨 경계 사례(q1), 정지선 보정 민감도(q2), θ 민감도(q3), 확정 시점의 여유(q4), 위험 오류 9건의 여유(q6) (이벤트별 표는 미포함) | Q | `v2xseq_v11.py`, `v2xseq_calibrate.py --lead-q`, `v2xseq_extract.py` |
 | `v2xseq/policy/` | 추종 정책 재생(R): 정책별 이벤트 지표(`events_default*.csv`), 요약·부트스트랩(`summary_default*.csv`), 민감도(`sensitivity.csv`), 외삽 집계 | R | `v2xseq_policy.py`, `src/dzp/policy_replay.py` |
-| `v2xseq/vehicle_type/` | 선두 차종(S): 차종 분포(s1), 차종별 t_50·우도비 검정(s2), 딜레마존 차종별 황색 후 성능·단계적 판단(s3), 추종 차량의 앞차 차종(s4) (이벤트별 표는 미포함) | S | `v2xseq_vehicle_type.py` |
+| `v2xseq/vehicle_type/` | 선두 차종(S): 차종 분포(s1), 차종별 t_50·우도비 검정(s2), 딜레마존 차종별 황색 후 성능·단계적 판단(s3), 추종 차량의 앞차 차종(s4), 앞차 결과별 추종 결과 교차표·앞차 정지&추종 통과 사례(s5) (이벤트별 표는 미포함) | S | `v2xseq_vehicle_type.py` |
 | `sind/` | SinD 공개 샘플 4모델 비교, 지도 겹침 그림 (이벤트표는 미포함, README 6절로 재생성) | SinD | `run_sind.py`, `sind_check_alignment.py` |
 | `sind/full/` | SinD v2.0 전체 선별, 창춘 선두 102건 경계·평가 | G | `sind_full.py` |
 | `womd/w0/` | WOMD 타당성 점검(샤드 2개) 요약 (이벤트·트랙별 표는 미포함, README 6절로 재생성) | W0 | `womd_w0.py` |

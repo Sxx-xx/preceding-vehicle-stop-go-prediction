@@ -19,11 +19,14 @@ MLP performance in the dilemma zone and the staged decision, and the leader type
           the a(t_c) of the large vehicles that actually stopped as in Q4 (only when >= MIN_DZ large leaders)
   s4    : dilemma-zone follower events (same all-events table, through, t_r known, d/v 2.5-5.5 s) by the class of
           their leader (ldr_id of dzp.features.build)
+  s5    : leader outcome x follower outcome cross-tables (through followers, band followers) and, for the
+          "leader stopped & follower went" cases, the lateral offsets on the approach from the raw tracks
+          (lane change = |lateral shift between onset and crossing| > LANE_W / 2)
 
 Classes: large = TRUCK or BUS, or median length >= LARGE_LEN_M; passenger = CAR or VAN below that; other = anything
 else (counted only). Outputs under results/v2xseq/vehicle_type/.
 
-  .venv/bin/python scripts/v2xseq_vehicle_type.py --tasks types,s1,s2,s3,s4
+  .venv/bin/python scripts/v2xseq_vehicle_type.py --tasks types,s1,s2,s3,s4,s5
 """
 import argparse
 import os
@@ -365,6 +368,73 @@ def s4(args, out):
         print("follower own class (band):", pd.crosstab(F["vehicle_class"][band], F["leader_class"][band]).to_string(), flush=True)
 
 
+# ------------------------------------------------------------------------------------------------ s5
+def _s5_case(e):
+    """Lateral offset of follower and leader on the approach (from the raw tracks): lane change check."""
+    from dzp.geometry import build_approaches, project
+    from dzp import events
+    rec = v2xseq.load_recording(ROOT, _G["segs"][e["recording"]], _G["lanes"], shift_table=_G["shift"])
+    ap = build_approaches(rec.map.stop_lines())[int(e["sid"])]
+    out = dict(recording=e["recording"], track_id=int(e["track_id"]), ldr_id=int(e["ldr_id"]))
+    for who, tid in (("fol", int(e["track_id"])), ("ldr", int(e["ldr_id"]))):
+        k = rec.tracks[rec.tracks["track_id"] == tid].sort_values("frame_id")
+        fr = k["frame_id"].values
+        fx = k["x"].values + 0.5 * k["length"].values * np.cos(k["heading_rad"].values)
+        fy = k["y"].values + 0.5 * k["length"].values * np.sin(k["heading_rad"].values)
+        d, lat = project(ap, fx, fy)
+        v = np.hypot(k["vx"].values, k["vy"].values)
+        ts = (fr - e["f_yellow"]) * v2xseq.DT
+        i0 = int(np.argmin(np.abs(fr - e["k0"])))
+        after = fr >= e["k0"]
+        cross = np.where((d[:-1] > 0) & (d[1:] <= 0) & after[1:])[0] + 1
+        halt = np.where(after & (v < events.V_STOP) & (d > 0))[0]
+        out.update({f"{who}_lat_onset": float(lat[i0]), f"{who}_d_onset": float(d[i0]), f"{who}_v_onset": float(v[i0]),
+                    f"{who}_t_cross": float(ts[cross[0]]) if len(cross) else np.nan, f"{who}_lat_cross": float(lat[cross[0]]) if len(cross) else np.nan,
+                    f"{who}_t_halt": float(ts[halt[0]]) if len(halt) else np.nan, f"{who}_d_halt": float(d[halt[0]]) if len(halt) else np.nan,
+                    f"{who}_lat_halt": float(lat[halt[0]]) if len(halt) else np.nan, f"{who}_t_end": float(ts[-1]), f"{who}_d_end": float(d[-1]),
+                    f"{who}_lat_min": float(lat[after].min()), f"{who}_lat_max": float(lat[after].max())})
+        if who == "fol":
+            fol = (ts, d, lat)
+    # leader's position when the follower crosses, and the follower's lateral shift
+    ts_f, d_f, lat_f = fol
+    out["fol_lat_shift"] = out["fol_lat_cross"] - out["fol_lat_onset"] if np.isfinite(out["fol_t_cross"]) else np.nan
+    out["lane_change"] = bool(abs(out["fol_lat_shift"]) > LANE_HALF) if np.isfinite(out["fol_lat_shift"]) else None
+    return out
+
+
+LANE_HALF = v2xseq.LANE_W / 2
+
+
+def s5(args, out):
+    from v2xseq_v11 import _init, _G as G11
+    A = pd.read_csv(ALL_EVENTS)
+    F = A[(A["ldr_id"] >= 0) & (A["movement"] == "through") & A["t_r"].notna()].copy()
+    band = (F["tt"].values >= DZ_LO) & (F["tt"].values <= DZ_HI)
+    F["leader_outcome"] = F["ldr_label"].map({0: "leader_stop", 1: "leader_go"}).fillna("leader_unknown")
+    F["follower_outcome"] = F["label"].map({0: "follower_stop", 1: "follower_go"})
+    rows = []
+    for lab, m in (("followers_through", np.ones(len(F), bool)), ("followers_band", band)):
+        ct = pd.crosstab(F["leader_outcome"][m], F["follower_outcome"][m])
+        for lo in ("leader_go", "leader_stop", "leader_unknown"):
+            for fo in ("follower_go", "follower_stop"):
+                rows.append(dict(subset=lab, leader_outcome=lo, follower_outcome=fo, n=int(ct.loc[lo, fo]) if lo in ct.index and fo in ct.columns else 0))
+    C = pd.DataFrame(rows)
+    C.to_csv(f"{out}/s5_leader_follower_crosstab.csv", index=False)
+    print(C.pivot_table(index=["subset", "leader_outcome"], columns="follower_outcome", values="n").to_string(), flush=True)
+    X = F[(F["ldr_label"] == 0) & (F["label"] == 1)]
+    print(f"[s5] leader stop & follower go: {len(X)} (band {int(((X.tt >= DZ_LO) & (X.tt <= DZ_HI)).sum())})", flush=True)
+    _init("results/v2xseq/stopline_shift.csv")
+    _G.update(G11)
+    cases = pd.DataFrame([_s5_case(e) for _, e in X.iterrows()])
+    cases.insert(3, "band", ((X["tt"].values >= DZ_LO) & (X["tt"].values <= DZ_HI)))
+    cases.insert(4, "lane", X["lane"].values)
+    cases.insert(5, "tt_onset", X["tt"].values)
+    cases.insert(6, "ldr_gap_onset", X["ldr_gap"].values)
+    cases.to_csv(f"{out}/s5_leader_stop_follower_go.csv", index=False)
+    with pd.option_context("display.width", 300, "display.max_columns", 40):
+        print(cases.round(3).T.to_string(), flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tasks", default="types,s1,s2,s3,s4")
@@ -376,7 +446,7 @@ def main():
     for t in args.tasks.split(","):
         print(f"==== {t}", flush=True)
         {"types": lambda: types(args), "attach": attach_leaders, "s1": lambda: s1(args, args.out), "s2": lambda: s2(args, args.out),
-         "s3": lambda: s3(args, args.out), "s4": lambda: s4(args, args.out)}[t]()
+         "s3": lambda: s3(args, args.out), "s4": lambda: s4(args, args.out), "s5": lambda: s5(args, args.out)}[t]()
 
 
 if __name__ == "__main__":

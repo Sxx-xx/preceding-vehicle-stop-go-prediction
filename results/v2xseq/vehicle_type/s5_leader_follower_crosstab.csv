@@ -1,0 +1,13 @@
+subset,leader_outcome,follower_outcome,n
+followers_through,leader_go,follower_go,210
+followers_through,leader_go,follower_stop,299
+followers_through,leader_stop,follower_go,3
+followers_through,leader_stop,follower_stop,337
+followers_through,leader_unknown,follower_go,4
+followers_through,leader_unknown,follower_stop,21
+followers_band,leader_go,follower_go,112
+followers_band,leader_go,follower_stop,232
+followers_band,leader_stop,follower_go,2
+followers_band,leader_stop,follower_stop,129
+followers_band,leader_unknown,follower_go,1
+followers_band,leader_unknown,follower_stop,10
