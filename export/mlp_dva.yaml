@@ -1,0 +1,31 @@
+file: mlp_dva.joblib
+object: sklearn Pipeline(StandardScaler, MLPClassifier)
+input_columns:
+- d
+- v
+- a
+input_units: 'd: front-bumper distance to the stop line (m, calibrated line); v: speed
+  (m/s); a: longitudinal acceleration (m/s^2); all at the prediction time'
+output: predict_proba[:, 1] = P(go)
+hidden_layer_sizes:
+- 32
+- 16
+alpha: 0.01
+max_iter: 3000
+random_state: 0
+n_iter_: 193
+converged: true
+loss_: 0.2537543324279036
+training_data:
+  n_leaders: 1867
+  n_go: 1292
+  lead_s: 0.0
+training_set_macro_f1:
+  all: 0.8658802459833906
+  band: 0.6566941272823625
+note: fitted on all 1,867 leaders at lead 0 s (no folds held out); the after-onset
+  update in the L / N sections fits one such model per training fold (23-fold LOIO)
+  and per lead 0 / 0.5 / 1.0 / 1.5 / 2.0 s
+exported: '2026-10-29'
+sklearn: 1.9.1
+python: 3.12.3

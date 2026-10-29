@@ -1,0 +1,23 @@
+model: univariate logistic regression on d/v at yellow onset
+formula: P(go) = 1 / (1 + exp(-(b0 + b1 * tt))), tt = d / v (s); decision go iff tt
+  < t50
+b0: 4.880409984716253
+b1: -1.82522110622913
+t50_s: 2.6738733011909344
+fit: sklearn LogisticRegression(max_iter=1000), default L2 penalty C=1 (as the t_50
+  of docs/FINDINGS.md D / Q2)
+training_data:
+  source: V2X-Seq-TFD single-infrastructure, through platoon leaders at yellow onset,
+    calibrated stop lines (results/v2xseq/stopline_shift.csv)
+  n_leaders: 1867
+  n_go: 1292
+  n_used_tt_le_12s: 1862
+  n_used_go: 1292
+  band_2_5_to_5_5_s:
+    n: 509
+    n_go: 132
+note: all 1,867 leaders, no folds held out; the 23-fold LOIO evaluation refits this
+  per training fold (fold t50 range 2.634-2.703 s)
+exported: '2026-10-29'
+sklearn: 1.9.1
+python: 3.12.3
