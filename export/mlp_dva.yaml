@@ -29,3 +29,67 @@ note: fitted on all 1,867 leaders at lead 0 s (no folds held out); the after-ons
 exported: '2026-10-29'
 sklearn: 1.9.1
 python: 3.12.3
+per_lead_models:
+- file: mlp_dva_t0.0.joblib
+  lead_s: 0.0
+  input_time: onset + 0.0 s (d, v, a at that time)
+  n_train: 1867
+  n_train_go: 1292
+  n_train_band: 509
+  n_iter_: 193
+  converged: true
+  loss_: 0.2537543324279036
+  training_set_macro_f1:
+    all: 0.8658802459833906
+    band: 0.6566941272823625
+- file: mlp_dva_t0.5.joblib
+  lead_s: 0.5
+  input_time: onset + 0.5 s (d, v, a at that time)
+  n_train: 1535
+  n_train_go: 960
+  n_train_band: 509
+  n_iter_: 241
+  converged: true
+  loss_: 0.25298165631341696
+  training_set_macro_f1:
+    all: 0.8823799324253667
+    band: 0.7444735877259779
+- file: mlp_dva_t1.0.joblib
+  lead_s: 1.0
+  input_time: onset + 1.0 s (d, v, a at that time)
+  n_train: 1274
+  n_train_go: 699
+  n_train_band: 509
+  n_iter_: 278
+  converged: true
+  loss_: 0.2386105820256368
+  training_set_macro_f1:
+    all: 0.8911364627090433
+    band: 0.759603274559194
+- file: mlp_dva_t1.5.joblib
+  lead_s: 1.5
+  input_time: onset + 1.5 s (d, v, a at that time)
+  n_train: 1043
+  n_train_go: 469
+  n_train_band: 509
+  n_iter_: 324
+  converged: true
+  loss_: 0.19053133226091992
+  training_set_macro_f1:
+    all: 0.9201974396297541
+    band: 0.8652412420044902
+- file: mlp_dva_t2.0.joblib
+  lead_s: 2.0
+  input_time: onset + 2.0 s (d, v, a at that time)
+  n_train: 851
+  n_train_go: 278
+  n_train_band: 508
+  n_iter_: 393
+  converged: true
+  loss_: 0.17995684840956194
+  training_set_macro_f1:
+    all: 0.9218280885132881
+    band: 0.8896132116471099
+per_lead_note: 'same configuration as mlp_dva.joblib; training set per lead as scripts/leadtime_dz.py
+  (used by the N-section staged decision): all leaders with t_r known, track observed
+  and not yet across the line at onset + t, not band only; mlp_dva_t0.0 equals mlp_dva'

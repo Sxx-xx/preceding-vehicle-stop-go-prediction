@@ -278,7 +278,7 @@ V2X=data/raw/v2xseq/full/extracted/V2X-Seq-TFD
 
 ### 배포용 모델 (export/)
 
-V2X-Seq 선두 1,867건 전체(황색 시작 시점)로 학습한 두 모델. `export/t50_params.yaml`: d/v 단변량 로지스틱의 b0, b1과 t50 = −b0/b1 (d/v ≤ 12 s, 1,862건; D·Q2 절과 같은 적합, t50 2.6739 s). `export/mlp_dva.joblib`: `Pipeline(StandardScaler, MLPClassifier(32, 16), alpha 0.01)`, 입력 (d, v, a), 출력 `predict_proba[:, 1]` = P(통과); 메타는 `export/mlp_dva.yaml`. 23폴드 설정과의 차이: 평가(b·c·d절)는 학습 교차로 22곳으로 폴드마다 다시 적합한 모델의 out-of-fold 값이고 황색 후 갱신은 리드타임별(0/0.5/1/1.5/2 s) 모델을 따로 두지만, 여기서는 폴드를 떼지 않고 1,867건 전부로 황색 시작 모델 하나만 적합했다(학습 집합 macro-F1 0.866은 성능 지표가 아님).
+V2X-Seq 선두 1,867건 전체(황색 시작 시점)로 학습한 두 모델. `export/t50_params.yaml`: d/v 단변량 로지스틱의 b0, b1과 t50 = −b0/b1 (d/v ≤ 12 s, 1,862건; D·Q2 절과 같은 적합, t50 2.6739 s). `export/mlp_dva.joblib`: `Pipeline(StandardScaler, MLPClassifier(32, 16), alpha 0.01)`, 입력 (d, v, a), 출력 `predict_proba[:, 1]` = P(통과); 메타는 `export/mlp_dva.yaml`. `export/mlp_dva_t{0.0,0.5,1.0,1.5,2.0}.joblib`: 같은 설정으로 황색 시작 + t 시점의 (d, v, a)에 학습한 리드타임별 모델 5개. 학습 집합은 N절 황색 후 갱신(`leadtime_dz.py`)과 같이 띠가 아니라 그 시점에 아직 정지선을 넘지 않은 선두 전체(1,867 / 1,535 / 1,274 / 1,043 / 851건)이고, t0.0은 `mlp_dva.joblib`과 동일하다. 23폴드 설정과의 차이: 평가(b·c·d절)는 학습 교차로 22곳으로 폴드마다 다시 적합한 모델의 out-of-fold 값이고 여기서는 폴드를 떼지 않고 각 리드타임의 사용 가능한 선두 전부로 한 번씩 적합했다(학습 집합 macro-F1 0.866은 성능 지표가 아님).
 
 ### 이벤트별 요약표 재생성
 
@@ -311,7 +311,7 @@ docs/FINDINGS.md  모든 수치와 확인/추측 구분 (실험 절별)
 docs/ROADMAP.md   진행 계획·상태
 docs/notes/       초기 학습 노트
 tests/          라벨링·규칙 단위 테스트
-export/         배포용 모델 (t50 계수 YAML, MLP(d, v, a) joblib; scripts/export_models.py)
+export/         배포용 모델 (t50 계수 YAML, MLP(d, v, a) joblib: 황색 시작 + 리드타임별 5개; scripts/export_models.py)
 ```
 
 ## 부록 A. NGSIM 입수 경로 (제외 데이터, 점검 재현용)

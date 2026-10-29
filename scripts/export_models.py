@@ -7,6 +7,11 @@
                           the dzp.bench_models.MLPDVA configuration used for the after-onset update (L / N sections),
                           fitted on all 1,867 leaders at lead 0 (the 23-fold runs fit one model per training fold
                           and per lead)
+  export/mlp_dva_t{0.0,0.5,1.0,1.5,2.0}.joblib
+                          the same configuration per lead t after onset, on the (d, v, a) at onset + t, with the
+                          training set of scripts/leadtime_dz.py (-> N section staged decision): every leader with
+                          t_r known whose track is still observed and that has not crossed the line at t (NOT band
+                          only; 1,867 / 1,535 / 1,274 / 1,043 / 851). mlp_dva_t0.0 is checked to equal mlp_dva.
 
   .venv/bin/python scripts/export_models.py
 """
@@ -90,6 +95,37 @@ def main():
     q = joblib.load(f"{OUT}/mlp_dva.joblib").predict_proba(F[DVA].values)[:, 1]
     assert np.allclose(p, q)
     print("round trip ok", flush=True)
+
+    # ---- (3) per-lead MLPs, training set as scripts/leadtime_dz.py (all usable leaders at lead L, not band only)
+    from staged_dz import LEADS, load
+    ev2, FS, band0, crossed, usable = load(LEADS_DIR)
+    y2 = ev2["label"].values.astype(int)
+    per_lead = []
+    for L in LEADS:
+        FL = FS[L][0]
+        m_tr = usable[L]                                  # ok0 & finite d & v known & not crossed (d > 0)
+        assert int(m_tr.sum()) == {0.0: 1867, 0.5: 1535, 1.0: 1274, 1.5: 1043, 2.0: 851}[L], (L, int(m_tr.sum()))
+        mL = MLPDVA().fit(FL.iloc[m_tr], FS[L][1][m_tr], y2[m_tr])
+        clfL = mL.est.steps[1][1]
+        assert clfL.hidden_layer_sizes == (32, 16) and clfL.alpha == 1e-2 and clfL.random_state == 0
+        fn = f"mlp_dva_t{L:.1f}.joblib"
+        joblib.dump(mL.est, f"{OUT}/{fn}")
+        pL = mL.est.predict_proba(FL[DVA].values[m_tr])[:, 1]
+        yhL = (pL >= 0.5).astype(int)
+        bL = band0[m_tr]
+        per_lead.append(dict(file=fn, lead_s=float(L), input_time=f"onset + {L:.1f} s (d, v, a at that time)", n_train=int(m_tr.sum()), n_train_go=int(y2[m_tr].sum()),
+                             n_train_band=int(bL.sum()), n_iter_=int(clfL.n_iter_), converged=bool(clfL.n_iter_ < clfL.max_iter), loss_=float(clfL.loss_),
+                             training_set_macro_f1=dict(all=float(bench_eval._macro_f1(y2[m_tr], yhL)), band=float(bench_eval._macro_f1(y2[m_tr][bL], yhL[bL])))))
+        if L == 0.0:
+            same = all(np.allclose(a, b) for a, b in zip(clf.coefs_, clfL.coefs_)) and all(np.allclose(a, b) for a, b in zip(clf.intercepts_, clfL.intercepts_))
+            assert same and np.allclose(sc.mean_, mL.est.steps[0][1].mean_), "mlp_dva_t0.0 differs from mlp_dva"
+            print("mlp_dva_t0.0 == mlp_dva (weights, scaler)", flush=True)
+        print(f"lead {L:.1f}: n {int(m_tr.sum())} (go {int(y2[m_tr].sum())}) iters {clfL.n_iter_} loss {clfL.loss_:.4f}", flush=True)
+    info["per_lead_models"] = per_lead
+    info["per_lead_note"] = ("same configuration as mlp_dva.joblib; training set per lead as scripts/leadtime_dz.py (used by the N-section staged decision): "
+                             "all leaders with t_r known, track observed and not yet across the line at onset + t, not band only; mlp_dva_t0.0 equals mlp_dva")
+    with open(f"{OUT}/mlp_dva.yaml", "w") as f:
+        yaml.safe_dump(info, f, sort_keys=False, allow_unicode=True)
 
 
 if __name__ == "__main__":
